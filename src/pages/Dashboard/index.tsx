@@ -1,78 +1,68 @@
-import React from "react";
-import { FiChevronRight } from "react-icons/fi";
+import React, { useState, FormEvent } from 'react';
+import { FiChevronRight } from 'react-icons/fi';
 
-import logoImage from "../../assets/logo.svg";
+import api from '../../services/api';
 
-import { Title, Form, Repositories } from "./styles";
+import logoImage from '../../assets/logo.svg';
 
-const Dashboard: React.FC = () => (
-  <>
-    <img src={logoImage} alt="Git Explorer" />
-    <Title>Explore repositórios no Github</Title>
+import { Title, Form, Repositories } from './styles';
 
-    <Form>
-      <input placeholder="Digite o nome do repositório" />
-      <button type="submit">Pequisar</button>
-    </Form>
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
 
-    <Repositories>
-      <a href="test">
-        <img
-          src="https://avatars0.githubusercontent.com/u/41699484?s=400&u=d37cb7c6852e8f1c5cec578cc10d8a54f3253cc2&v=4"
-          alt="Mayron Souza"
+const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setRepsitories] = useState<Repository[]>([]);
+
+  async function handleAddrepository(
+    e: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    e.preventDefault();
+
+    const reponse = await api.get<Repository>(`repos/${newRepo}`);
+
+    const repository = reponse.data;
+
+    setRepsitories([...repositories, repository]);
+    setNewRepo('');
+  }
+
+  return (
+    <>
+      <img src={logoImage} alt="Git Explorer" />
+      <Title>Explore repositórios no Github</Title>
+
+      <Form onSubmit={handleAddrepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Digite o nome do repositório"
         />
+        <button type="submit">Pequisar</button>
+      </Form>
 
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy highly scalable ReactJS & React Native forms! </p>
-        </div>
+      <Repositories>
+        {repositories.map((repo) => (
+          <a key={repo.full_name} href="test">
+            <img src={repo.owner.avatar_url} alt={repo.owner.login} />
 
-        <FiChevronRight size={20} />
-      </a>
+            <div>
+              <strong>{repo.full_name}</strong>
+              <p>{repo.description}</p>
+            </div>
 
-      <a href="test">
-        <img
-          src="https://avatars0.githubusercontent.com/u/41699484?s=400&u=d37cb7c6852e8f1c5cec578cc10d8a54f3253cc2&v=4"
-          alt="Mayron Souza"
-        />
-
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy highly scalable ReactJS & React Native forms! </p>
-        </div>
-
-        <FiChevronRight size={20} />
-      </a>
-
-      <a href="test">
-        <img
-          src="https://avatars0.githubusercontent.com/u/41699484?s=400&u=d37cb7c6852e8f1c5cec578cc10d8a54f3253cc2&v=4"
-          alt="Mayron Souza"
-        />
-
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy highly scalable ReactJS & React Native forms! </p>
-        </div>
-
-        <FiChevronRight size={20} />
-      </a>
-
-      <a href="test">
-        <img
-          src="https://avatars0.githubusercontent.com/u/41699484?s=400&u=d37cb7c6852e8f1c5cec578cc10d8a54f3253cc2&v=4"
-          alt="Mayron Souza"
-        />
-
-        <div>
-          <strong>rocketseat/unform</strong>
-          <p>Easy peasy highly scalable ReactJS & React Native forms! </p>
-        </div>
-
-        <FiChevronRight size={20} />
-      </a>
-    </Repositories>
-  </>
-);
+            <FiChevronRight size={20} />
+          </a>
+        ))}
+      </Repositories>
+    </>
+  );
+};
 
 export default Dashboard;
