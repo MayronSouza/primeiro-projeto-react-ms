@@ -5,7 +5,7 @@ import api from '../../services/api';
 
 import logoImage from '../../assets/logo.svg';
 
-import { Title, Form, Repositories } from './styles';
+import { Title, Form, Repositories, Error } from './styles';
 
 interface Repository {
   full_name: string;
@@ -18,6 +18,7 @@ interface Repository {
 
 const Dashboard: React.FC = () => {
   const [newRepo, setNewRepo] = useState('');
+  const [inputError, setInputError] = useState('');
   const [repositories, setRepsitories] = useState<Repository[]>([]);
 
   async function handleAddrepository(
@@ -25,12 +26,22 @@ const Dashboard: React.FC = () => {
   ): Promise<void> {
     e.preventDefault();
 
-    const reponse = await api.get<Repository>(`repos/${newRepo}`);
+    if (!newRepo) {
+      setInputError('Digite o autor/nome do repositório');
+      return;
+    }
 
-    const repository = reponse.data;
+    try {
+      const reponse = await api.get<Repository>(`repos/${newRepo}`);
 
-    setRepsitories([...repositories, repository]);
-    setNewRepo('');
+      const repository = reponse.data;
+
+      setRepsitories([...repositories, repository]);
+      setNewRepo('');
+      setInputError('');
+    } catch (err) {
+      setInputError('Erro na busca por esse repositório');
+    }
   }
 
   return (
@@ -38,17 +49,19 @@ const Dashboard: React.FC = () => {
       <img src={logoImage} alt="Git Explorer" />
       <Title>Explore repositórios no Github</Title>
 
-      <Form onSubmit={handleAddrepository}>
+      <Form hasError={!!inputError} onSubmit={handleAddrepository}>
         <input
           value={newRepo}
-          onChange={(e) => setNewRepo(e.target.value)}
+          onChange={e => setNewRepo(e.target.value)}
           placeholder="Digite o nome do repositório"
         />
         <button type="submit">Pequisar</button>
       </Form>
 
+      {inputError && <Error>{inputError}</Error>}
+
       <Repositories>
-        {repositories.map((repo) => (
+        {repositories.map(repo => (
           <a key={repo.full_name} href="test">
             <img src={repo.owner.avatar_url} alt={repo.owner.login} />
 
